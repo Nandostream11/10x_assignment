@@ -81,7 +81,8 @@ class DWAPlannerCustom : public rclcpp::Node {
         }
         // 3. Velocity cost (higher forward velocities)
         double velocity_cost = (v_max_ - v);
-
+        
+        // Total Cost Function: Minimization for best trajectory
         double total_cost = ALPHA * heading_cost + BETA * obstacle_cost + GAMMA * velocity_cost;
 
         all_trajs.push_back(traj);

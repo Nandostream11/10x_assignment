@@ -56,6 +56,7 @@ The turtlebot3_gazebo package is also added to the src to simulate the Trutlebot
 Main algorithm Workflow-
 [nav_goal_dwa]: Receive goal(x,y) from service -> Send goal iteratively to dwa_planner_custom -> Publish sampled trajectories, best trajectory marker array(to dwa_trajectories) -> Publish the best velcoity pairs
 
-[dwa_planner_custom]: 
+[dwa_planner_custom]: obstacles map(scan) -> Velosity (Linear, Angular) sampling -> iteration over cost function (minimization) -> Local Planning
 
 Below is the video demonstration:
+https://youtu.be/y8iu5mr0jKo
