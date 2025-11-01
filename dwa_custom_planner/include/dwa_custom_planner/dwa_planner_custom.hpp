@@ -107,10 +107,10 @@ class DWAPlannerCustom : public rclcpp::Node {
   // DWA parameters
   double v_min_ = 0.0;
   double v_max_ = 0.5;
-  double w_min_ = -0.42;
-  double w_max_ = 0.42;
+  double w_min_ = -0.62;
+  double w_max_ = 0.62;
   double acc_v = 0.2;
-  double acc_w = 0.8;
+  double acc_w = 0.7;
   double v_res_ = 0.08;     // Linear velocity resolution(step size) 
   double w_res_ = 0.2;      // Angular velocity resolution(step size)
   double inflation_rad= 0.25;

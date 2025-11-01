@@ -11,10 +11,11 @@ class NAVGOALDWA : public rclcpp::Node
 {
  public:
     NAVGOALDWA() : Node("nav_goal_dwa")
-    {
+    {   // Goal service
         service_ = this->create_service<dwa_custom_planner::srv::ToGoal>("togoal", std::bind(&NAVGOALDWA::goal_callback, this, _1, _2));
-
+        // marker array for visualization of trajectory rollouts and best trajectory selected
         marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("dwa_trajectories", 10);
+        // to publish best v, w commands
         cmd_pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
 
         RCLCPP_INFO(this->get_logger(), "DWA Service Node started. Waiting for goal...");
@@ -30,7 +31,7 @@ class NAVGOALDWA : public rclcpp::Node
         RCLCPP_INFO(this->get_logger(), "Received goal: (%.2f, %.2f)", request->goal_x, request->goal_y);
         auto dwa = std::make_shared<DWAPlannerCustom>();
         dwa->setGoal(request->goal_x, request->goal_y);
-        rclcpp::Rate rate(10.0);       // 10 Hz
+        rclcpp::Rate rate(20.0);       // 10 Hz
 
         double dist_to_goal = std::numeric_limits<double>::max();
 
@@ -49,13 +50,13 @@ class NAVGOALDWA : public rclcpp::Node
                 auto last = best_traj.back();
                 dist_to_goal = std::hypot(request->goal_x - last.x, request->goal_y - last.y);
             }
-                    // Publish visualization and command
+            // Publish visualization and command
             publishTrajectories(all_trajs, best_traj);
             publishCmdVel(best_v, best_w);
             RCLCPP_INFO(this->get_logger(),"v=%.2f w=%.2f dist=%.2f", best_v, best_w, dist_to_goal);
 
-            rclcpp::spin_some(dwa);  // let subscriptions update odom/scan
-            rate.sleep();
+            rclcpp::spin_some(dwa);  // let subscriptions update odom/scan in header
+            rate.sleep();            
         }
         // Stop the robot
         publishCmdVel(0.0, 0.0);
