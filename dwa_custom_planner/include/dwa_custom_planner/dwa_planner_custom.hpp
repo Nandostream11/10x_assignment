@@ -71,20 +71,18 @@ class DWAPlannerCustom : public rclcpp::Node {
 
         // 2. Obstacle cost (minimum distance to obstacles along the trajectory)
         double obstacle_cost = 0.0;
-        for (const auto &ob : obstacles_) {
-          for (const auto &p : traj) {
+        for (const auto &ob : obstacles_) {           // obstacles_ map
+          for (const auto &p : traj) {                // trajectory rollouts
             double d = std::hypot(p.x - ob[0], p.y - ob[1]);
-            if (d < 0.25) {
-              obstacle_cost += (0.25 - d) * 10.0;
+            if (d < inflation_rad) {
+              obstacle_cost += (inflation_rad - d) * 10.0;
             }
           }
         }
         // 3. Velocity cost (higher forward velocities)
         double velocity_cost = (v_max_ - v);
 
-        double total_cost = ALPHA * heading_cost +
-                            BETA * obstacle_cost +
-                            GAMMA * velocity_cost;
+        double total_cost = ALPHA * heading_cost + BETA * obstacle_cost + GAMMA * velocity_cost;
 
         all_trajs.push_back(traj);
 
@@ -106,6 +104,25 @@ class DWAPlannerCustom : public rclcpp::Node {
   }
 
  private:
+  // DWA parameters
+  double v_min_ = 0.0;
+  double v_max_ = 0.5;
+  double w_min_ = -0.42;
+  double w_max_ = 0.42;
+  double acc_v = 0.2;
+  double acc_w = 0.8;
+  double v_res_ = 0.08;     // Linear velocity resolution(step size) 
+  double w_res_ = 0.2;      // Angular velocity resolution(step size)
+  double inflation_rad= 0.25;
+  // Cost weights of DWA (usually ALPHA+BETA+GAMMA= close to 3)
+  double ALPHA = 1.4;   // heading weight
+  double BETA = 1.4;  // obstacle weight
+  double GAMMA = 0.2;  // velocity weight
+
+  double del_T = 2.0;   // Trajectory rollout
+  double dt_ = 0.05;    // sampling frequency
+
+  // States
   double current_x = 0.0;
   double current_y = 0.0;
   double current_yaw = 0.0;
@@ -114,25 +131,7 @@ class DWAPlannerCustom : public rclcpp::Node {
   double goal_x_=0.0;
   double goal_y_=0.0;
 
-  // DWA parameters
-  double v_min_ = 0.0;
-  double v_max_ = 0.56;
-  double w_min_ = -0.62;
-  double w_max_ = 0.62;
-  double acc_v = 0.2;
-  double acc_w = 0.8;
-  double v_res_ = 0.08;     // Linear velocity resolution(step size) 
-  double w_res_ = 0.2;      // Angular velocity resolution(step size)
-  double del_T = 2.0;
-  double dt_ = 0.05;
-
-  // Cost weights
-  double ALPHA = 1.4;   // heading weight
-  double BETA = 1.4;  // obstacle weight
-  double GAMMA = 0.2;  // velocity weight
-
   std::vector<std::array<double, 2>> obstacles_;
-
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub;
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_sub;
 
@@ -153,7 +152,7 @@ class DWAPlannerCustom : public rclcpp::Node {
     curr_w_ = msg->twist.twist.angular.z;
   }
 
-  void scanCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg) {
+  void scanCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg) {   // obstacles_ map using LiDAR Point cloud
     std::vector<std::pair<double, double>> pts;
     double angle = msg->angle_min;
 
