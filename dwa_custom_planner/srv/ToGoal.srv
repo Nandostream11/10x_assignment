@@ -1,0 +1,6 @@
+float64 goal_x
+float64 goal_y
+---
+float64 linear_vel
+float64 angular_vel
+geometry_msgs/Point[] traj_points
